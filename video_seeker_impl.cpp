@@ -1,4 +1,6 @@
 #include "video_seeker_impl.h"
+#include "logging.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -12,25 +14,25 @@ namespace lius_tools {
 VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
   frame_ = av_frame_alloc();
   if (!frame) {
-    qDebug() << "Could not allocate frame";
+    LOG(ERROR) << "Could not allocate frame";
     return;
   }
 
   packet_ = av_packet_alloc();
   if (!packet) {
-    qDebug() << "Could not allocate packet";
+    LOG(ERROR) << "Could not allocate packet";
     return;
   }
 
   int ret = 0;
   if (ret = avformat_open_input(&format_context_, file_path.c_str(),
                                 nullptr, nullptr)) {
-    qDebug() << "avformat_open_input failed with error " << ret;
+    LOG(ERROR) << "avformat_open_input failed with error " << ret;
     return;
   }
 
   if ((ret = avformat_find_stream_info(format_context_, nullptr)) < 0) {
-    qDebug() << "Could not find stream info with error " << ret;
+    LOG(ERROR) << "Could not find stream info with error " << ret;
     return;
   }
 
@@ -44,31 +46,31 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
   }
 
   if (!stream_) {
-    qDebug() << "Could not locate the video stream";
+    LOG(ERROR) << "Could not locate the video stream";
     return;
   }
 
   codec_ = avcodec_find_decoder(stream_->codecpar->codec_id);
   if (!codec_) {
-    qDebug() << "Could not find codec";
+    LOG(ERROR) << "Could not find codec";
     return;
   }
 
   codec_context_ = avcodec_alloc_context3(codec_);
   if (!codec_context_) {
-    qDebug() << "Could not allocate codec context";
+    LOG(ERROR) << "Could not allocate codec context";
     return;
   }
 
   if(avcodec_parameters_to_context(
          codec_context_,
          stream_->codecpar) != 0) {
-    qDebug() << "Could not make codec context from parameters";
+    LOG(ERROR) << "Could not make codec context from parameters";
     return;
   }
 
   if (avcodec_open2(codec_context_, codec_, nullptr) < 0) {
-    qDebug() << "Could not open codec";
+    LOG(ERROR) << "Could not open codec";
     return;
   }
 
@@ -84,7 +86,7 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
           height,
           AV_PIX_FMT_RGB32,
           1 /* align */)) < 0) {
-    qDebug() << "Could not allocate image " << ret;
+    LOG(ERROR) << "Could not allocate image " << ret;
     return;
   }
 
@@ -101,21 +103,21 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
                      nullptr /* param */);
 
   if (!sws_context_) {
-    qDebug() << "Could not make a sws context";
+    LOG(ERROR) << "Could not make a sws context";
     return;
   }
 
   seek(0.0);
 }
 
-void VideoSeekerImpl::seek(double ts) {
+void VideoSeekerImpl::Seek(double ts) {
   const uint64_t ts_int = ts * AV_TIME_BASE;
   if ((ret =
        av_seek_frame(
            format_context,
            -1, // stream idx
            ts_int, AVSEEK_FLAG_BACKWARD)) < 0) {
-    qDebug() << "Could not seek " << ret;
+    LOG(ERROR) << "Could not seek " << ret;
     return;
   };
 
@@ -129,7 +131,7 @@ void VideoSeekerImpl::seek(double ts) {
     }
 
     if ((ret = avcodec_send_packet(codec_context, packet)) < 0) {
-      qDebug() << "Error during decoding " << ret;
+      LOG(ERROR) << "Error during decoding " << ret;
       av_packet_unref(packet);
       return;
     }
@@ -137,10 +139,10 @@ void VideoSeekerImpl::seek(double ts) {
     while (ret >= 0) {
       ret = avcodec_receive_frame(codec_context_, frame_);
       if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-        qDebug() << "Codec wants another packet";
+        LOG(ERROR) << "Codec wants another packet";
         break; // No more frames left in this packet
       } else if (ret < 0) {
-        qDebug() << "Error during decoding (receiving frame) " << ret;
+        LOG(ERROR) << "Error during decoding (receiving frame) " << ret;
         av_packet_unref(packet_);
         return;
       }

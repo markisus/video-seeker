@@ -3,8 +3,6 @@
 
 namespace lius_tools {
 
-class VideoSeeker; // Forward declaration for friend class
-
 class VideoSeekerImpl {
   VideoSeekerImpl(const std::string& file_path);
   void seek(double ts);
@@ -29,9 +27,7 @@ class VideoSeekerImpl {
   uint16_t height_ = 0;
 
   double current_time_ = 0.0;
-
-  friend VideoSeeker;
-}
+};
 
 }
 

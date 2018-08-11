@@ -13,18 +13,18 @@ class VideoSeeker {
   VideoSeeker(const std::string& file_path);
   ~VideoSeeker();
 
-  double seek(double timestamp);
+  const std::string& file_path() const;
   uint16_t width() const;
   uint16_t height() const;
-  const QImage& image() const;
+
+  double Seek(double timestamp);
 
   // Returns pointer to raw image buffer in RGB32 format
-  const uint8* data() const;
+  const uint8_t* data() const;
   
  private:
   std::string& file_path_;
   std::unique_ptr<VideoSeekerImpl> impl_;
-  QImage image_;
 };
 
 }

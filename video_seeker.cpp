@@ -7,8 +7,8 @@ VideoSeeker::VideoSeeker(const std::string& file_path) :
     file_path_(file_path),
     impl_(new VideoSeekerImpl(file_path)) {};
 
-VideoSeeker::seek(double ts) {
-  impl_->seek(ts);
+VideoSeeker::Seek(double ts) {
+  impl_->Seek(ts);
 }
 
 uint16_t VideoSeker::width() const {
@@ -19,8 +19,8 @@ uint16_t VideoSeker::height() const {
   return impl_->height_;
 }
 
-const QImage& VideoSeeker::image() const {
-  return image_(impl_->pointers[0], impl_->width_, impl_->height, /* format rgb32*/);
-}
-  
+const uint8_t* data() const {
+  return impl_->pointers[0];
+};
+
 }
