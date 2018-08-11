@@ -1,25 +1,17 @@
 #include "video_seeker_impl.h"
 #include "logging.h"
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/dict.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
-}
-
 namespace lius_tools {
 
 VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
   frame_ = av_frame_alloc();
-  if (!frame) {
+  if (!frame_) {
     LOG(ERROR) << "Could not allocate frame";
     return;
   }
 
   packet_ = av_packet_alloc();
-  if (!packet) {
+  if (!packet_) {
     LOG(ERROR) << "Could not allocate packet";
     return;
   }
@@ -36,8 +28,8 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
     return;
   }
 
-  for (uint16_t i = 0; i < format_context->nb_streams; ++i) {
-    AVStream* candidate_stream = format_context->streams[i];
+  for (uint16_t i = 0; i < format_context_->nb_streams; ++i) {
+    AVStream* candidate_stream = format_context_->streams[i];
     if (candidate_stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
       stream_ = candidate_stream;
       stream_index_ = i;
@@ -82,8 +74,8 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
   if ((ret = av_image_alloc(
           pointers,
           linesizes,
-          width,
-          height,
+          width_,
+          height_,
           AV_PIX_FMT_RGB32,
           1 /* align */)) < 0) {
     LOG(ERROR) << "Could not allocate image " << ret;
@@ -107,32 +99,33 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
     return;
   }
 
-  seek(0.0);
+  Seek(0.0);
 }
 
 void VideoSeekerImpl::Seek(double ts) {
+  int ret;
   const uint64_t ts_int = ts * AV_TIME_BASE;
   if ((ret =
        av_seek_frame(
-           format_context,
+           format_context_,
            -1, // stream idx
            ts_int, AVSEEK_FLAG_BACKWARD)) < 0) {
     LOG(ERROR) << "Could not seek " << ret;
     return;
   };
 
-  av_flush_buffers(codec_context_);
+  avcodec_flush_buffers(codec_context_);
 
   while (av_read_frame(format_context_, packet_) == 0) {
     if (packet_->stream_index != stream_index_) {
       // Not the video stream
-      av_packet_unref(packet);
+      av_packet_unref(packet_);
       continue;
     }
 
-    if ((ret = avcodec_send_packet(codec_context, packet)) < 0) {
+    if ((ret = avcodec_send_packet(codec_context_, packet_)) < 0) {
       LOG(ERROR) << "Error during decoding " << ret;
-      av_packet_unref(packet);
+      av_packet_unref(packet_);
       return;
     }
 

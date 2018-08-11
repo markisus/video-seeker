@@ -11,7 +11,6 @@ class VideoSeekerImpl;
 class VideoSeeker {
  public:
   VideoSeeker(const std::string& file_path);
-  ~VideoSeeker();
 
   const std::string& file_path() const;
   uint16_t width() const;
@@ -23,7 +22,7 @@ class VideoSeeker {
   const uint8_t* data() const;
   
  private:
-  std::string& file_path_;
+  const std::string file_path_;
   std::unique_ptr<VideoSeekerImpl> impl_;
 };
 

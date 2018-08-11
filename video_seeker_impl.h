@@ -1,14 +1,24 @@
 #ifndef _LIUS_TOOLS_VIDEO_SEEKER_IMPL_H_
 #define _LIUS_TOOLS_VIDEO_SEEKER_IMPL_H_
 
+#include <string>
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/dict.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+}
+
 namespace lius_tools {
 
 class VideoSeekerImpl {
+ public:
   VideoSeekerImpl(const std::string& file_path);
-  void seek(double ts);
+  void Seek(double ts);
   ~VideoSeekerImpl();
 
- private:
   AVPacket* packet_ = nullptr;
   AVFrame* frame_ = nullptr;
 

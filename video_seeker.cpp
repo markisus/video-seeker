@@ -7,20 +7,27 @@ VideoSeeker::VideoSeeker(const std::string& file_path) :
     file_path_(file_path),
     impl_(new VideoSeekerImpl(file_path)) {};
 
-VideoSeeker::Seek(double ts) {
+double VideoSeeker::Seek(double ts) {
   impl_->Seek(ts);
+  // todo: return actual seek time
+  return ts;
 }
 
-uint16_t VideoSeker::width() const {
+const std::string & VideoSeeker::file_path() const
+{
+	return file_path_;
+}
+
+uint16_t VideoSeeker::width() const {
   return impl_->width_;
 }
 
-uint16_t VideoSeker::height() const {
+uint16_t VideoSeeker::height() const {
   return impl_->height_;
 }
 
-const uint8_t* data() const {
-  return impl_->pointers[0];
+const uint8_t* VideoSeeker::data() const {
+  return impl_->pointers_[0];
 };
 
 }
