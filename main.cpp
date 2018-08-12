@@ -14,11 +14,25 @@ int main(int argc, char *argv[])
   LOG(INFO) << "Video height " << video_seeker.height();
   LOG(INFO) << "Video duration " << video_seeker.duration();
 
-  // Need max timestamp accessors
-
   // Seek to 1.5 secs
-  video_seeker.Seek(1.5);
+  const double seeked_time = video_seeker.Seek(1.5);
+  LOG(INFO) << "Seeked to " << seeked_time;
 
   LOG(INFO) << "Data pointer at " << (unsigned long)(video_seeker.data());
+
+  // Test for memory leak
+  if (false) {
+    size_t BREAK_EVERY_N = 1000;
+    size_t idx = 0;
+    while (true) {
+      VideoSeeker temp_seeker { video_path };
+      temp_seeker.Seek(1.234);
+      ++idx;
+
+      if (BREAK_EVERY_N == idx) {
+        idx = 0;
+      }
+    }
+  }
   return 0;
 }

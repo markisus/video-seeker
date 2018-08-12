@@ -146,9 +146,11 @@ void VideoSeekerImpl::Seek(double ts) {
       frame_pts_rational =
           av_mul_q(frame_pts_rational, stream_->time_base);
         
-      current_time_ = av_q2d(frame_pts_rational);
+      const double next_time = av_q2d(frame_pts_rational);
 
-      if (current_time_ <= ts) {
+      if (next_time <= ts) {
+        current_time_ = next_time;
+        LOG(DEBUG) << "Current time updated to " << current_time_;
         sws_scale(
             sws_context_,
             frame_->data,
