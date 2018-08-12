@@ -5,7 +5,9 @@ namespace lius_tools {
 
 VideoSeeker::VideoSeeker(const std::string& file_path) :
     file_path_(file_path),
-    impl_(new VideoSeekerImpl(file_path)) {};
+    impl_(new VideoSeekerImpl(file_path)) {}
+
+VideoSeeker::~VideoSeeker() = default;
 
 double VideoSeeker::Seek(double ts) {
   impl_->Seek(ts);

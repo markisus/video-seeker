@@ -11,6 +11,7 @@ class VideoSeekerImpl;
 class VideoSeeker {
  public:
   VideoSeeker(const std::string& file_path);
+  ~VideoSeeker();
 
   const std::string& file_path() const;
   uint16_t width() const;
