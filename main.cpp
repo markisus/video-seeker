@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 
   LOG(INFO) << "Video width " << video_seeker.width();
   LOG(INFO) << "Video height " << video_seeker.height();
+  LOG(INFO) << "Video duration " << video_seeker.duration();
 
   // Need max timestamp accessors
 

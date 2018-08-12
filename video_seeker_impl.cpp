@@ -27,6 +27,8 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
     return;
   }
 
+  duration_ = format_context_->duration/(double)AV_TIME_BASE;
+
   for (uint16_t i = 0; i < format_context_->nb_streams; ++i) {
     AVStream* candidate_stream = format_context_->streams[i];
     if (candidate_stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
@@ -68,17 +70,17 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
   width_ = stream_->codecpar->width;
   height_ = stream_->codecpar->height;
 
-  uint8_t* pointers[4];
-  int linesizes[4];
   if ((ret_ = av_image_alloc(
-          pointers,
-          linesizes,
+          pointers_,
+          linesizes_,
           width_,
           height_,
           AV_PIX_FMT_RGB32,
           1 /* align */)) < 0) {
     LOG(ERROR) << "Could not allocate image " << ret_;
     return;
+  } else {
+    image_allocated_ = true;
   }
 
   sws_context_ =
@@ -166,14 +168,25 @@ void VideoSeekerImpl::Seek(double ts) {
 }
 
 VideoSeekerImpl::~VideoSeekerImpl() {
-    // todo
-    // free(packet_);
-    // free(frame_);
-    // free(format_context_)
-    // free(codec_);
-    // free(codec_context_);
-    // free(pointers_[0])
-    // free(sws_context_);
+  if (packet_) {
+    av_packet_free(&packet_);
+  }
+  if (frame_) {
+    av_frame_free(&frame_);
+  }
+  if (format_context_) {
+    avformat_close_input(&format_context_);
+  }
+  if (codec_context_) {
+    avcodec_free_context(&codec_context_);
+  }
+  // free(codec_); (?)
+  if (image_allocated_) {
+    av_freep(&pointers_[0]);
+  }
+  if (sws_context_) {
+    sws_freeContext(sws_context_);
+  }
 }
 
 }

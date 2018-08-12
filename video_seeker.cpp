@@ -20,9 +20,13 @@ double VideoSeeker::Seek(double ts) {
   return impl_->current_time_;
 }
 
-const std::string & VideoSeeker::file_path() const
+double VideoSeeker::duration() const {
+  return impl_->duration_;
+}
+
+const std::string& VideoSeeker::file_path() const
 {
-	return file_path_;
+  return file_path_;
 }
 
 uint16_t VideoSeeker::width() const {

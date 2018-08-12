@@ -28,7 +28,8 @@ class VideoSeekerImpl {
   AVCodec* codec_ = nullptr;
   AVCodecContext* codec_context_ = nullptr;
 
-  // For conversion to RGB32 
+  // For conversion to RGB32
+  bool image_allocated_ = false;
   uint8_t* pointers_[4];
   int linesizes_[4];
   SwsContext* sws_context_ = nullptr;
@@ -37,6 +38,7 @@ class VideoSeekerImpl {
   uint16_t height_ = 0;
 
   double current_time_ = 0.0;
+  double duration_ = 0.0;
 
   int ret_ = 0;
 };

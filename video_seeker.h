@@ -16,6 +16,7 @@ class VideoSeeker {
   const std::string& file_path() const;
   uint16_t width() const;
   uint16_t height() const;
+  double duration() const;
 
   double Seek(double timestamp);
 
