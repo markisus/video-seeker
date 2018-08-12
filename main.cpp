@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
   LOG(INFO) << "This is the sandbox for testing video seeker";
 
-  const std::string video_path = "~/video.avi";
+  const std::string video_path = "C:/Users/marki/Videos/smash0.mp4";
   VideoSeeker video_seeker { video_path };
 
   LOG(INFO) << "Video width " << video_seeker.width();

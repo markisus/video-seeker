@@ -16,15 +16,14 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
     return;
   }
 
-  int ret = 0;
-  if (ret = avformat_open_input(&format_context_, file_path.c_str(),
+  if (ret_ = avformat_open_input(&format_context_, file_path.c_str(),
                                 nullptr, nullptr)) {
-    LOG(ERROR) << "avformat_open_input failed with error " << ret;
+    LOG(ERROR) << "avformat_open_input failed with error " << ret_;
     return;
   }
 
-  if ((ret = avformat_find_stream_info(format_context_, nullptr)) < 0) {
-    LOG(ERROR) << "Could not find stream info with error " << ret;
+  if ((ret_ = avformat_find_stream_info(format_context_, nullptr)) < 0) {
+    LOG(ERROR) << "Could not find stream info with error " << ret_;
     return;
   }
 
@@ -71,14 +70,14 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
 
   uint8_t* pointers[4];
   int linesizes[4];
-  if ((ret = av_image_alloc(
+  if ((ret_ = av_image_alloc(
           pointers,
           linesizes,
           width_,
           height_,
           AV_PIX_FMT_RGB32,
           1 /* align */)) < 0) {
-    LOG(ERROR) << "Could not allocate image " << ret;
+    LOG(ERROR) << "Could not allocate image " << ret_;
     return;
   }
 
@@ -103,14 +102,13 @@ VideoSeekerImpl::VideoSeekerImpl(const std::string& file_path) {
 }
 
 void VideoSeekerImpl::Seek(double ts) {
-  int ret;
   const uint64_t ts_int = ts * AV_TIME_BASE;
-  if ((ret =
+  if ((ret_ =
        av_seek_frame(
            format_context_,
            -1, // stream idx
            ts_int, AVSEEK_FLAG_BACKWARD)) < 0) {
-    LOG(ERROR) << "Could not seek " << ret;
+    LOG(ERROR) << "Could not seek " << ret_;
     return;
   };
 
@@ -123,19 +121,19 @@ void VideoSeekerImpl::Seek(double ts) {
       continue;
     }
 
-    if ((ret = avcodec_send_packet(codec_context_, packet_)) < 0) {
-      LOG(ERROR) << "Error during decoding " << ret;
+    if ((ret_ = avcodec_send_packet(codec_context_, packet_)) < 0) {
+      LOG(ERROR) << "Error during decoding " << ret_;
       av_packet_unref(packet_);
       return;
     }
 
-    while (ret >= 0) {
-      ret = avcodec_receive_frame(codec_context_, frame_);
-      if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-        LOG(ERROR) << "Codec wants another packet";
+    while (ret_ >= 0) {
+      ret_ = avcodec_receive_frame(codec_context_, frame_);
+      if (ret_ == AVERROR(EAGAIN) || ret_ == AVERROR_EOF) {
+        LOG(DEBUG) << "Codec wants another packet";
         break; // No more frames left in this packet
-      } else if (ret < 0) {
-        LOG(ERROR) << "Error during decoding (receiving frame) " << ret;
+      } else if (ret_ < 0) {
+        LOG(ERROR) << "Error during decoding (receiving frame) " << ret_;
         av_packet_unref(packet_);
         return;
       }
@@ -146,8 +144,9 @@ void VideoSeekerImpl::Seek(double ts) {
       frame_pts_rational =
           av_mul_q(frame_pts_rational, stream_->time_base);
         
-      const double frame_pts_double = av_q2d(frame_pts_rational);
-      if (frame_pts_double <= ts) {
+      current_time_ = av_q2d(frame_pts_rational);
+
+      if (current_time_ <= ts) {
         sws_scale(
             sws_context_,
             frame_->data,

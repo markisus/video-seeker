@@ -37,6 +37,8 @@ class VideoSeekerImpl {
   uint16_t height_ = 0;
 
   double current_time_ = 0.0;
+
+  int ret_ = 0;
 };
 
 }
